@@ -66,3 +66,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+@font-face {
+  font-family: "Geist";
+  src: url("../pages/fonts/GeistVF.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: "Geist", sans-serif;
+}

@@ -1,14 +1,17 @@
+import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 export default function Home() {
 
-  const [title, setTitle] = useState<string>("Home");
+  const router = useRouter();
+
+
+  const toLoginPage = () => router.push("/login");
 
   return (
-    <main>
-      <h1>{title}</h1>
-      <Button variant="default">shadcn/ui</Button>
+    <main className="flex flex-col items-center justify-center h-screen">
+      <h1 className="text-2xl mb-12">Home</h1>
+      <Button variant="default" onClick={toLoginPage}>shadcn/ui</Button>
     </main>
   );
 }
