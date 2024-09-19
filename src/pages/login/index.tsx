@@ -1,4 +1,4 @@
-import useSWRMutation from "swr/mutation";
+import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,8 +12,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
+import { store } from "@/redux/index";
+import { storeAccessToken } from "@/redux/dispatcher";
 import { login } from "@/lib/auth/api";
+import { useState } from 'react';
  
 const formSchema = z.object({
   email: z.string().email("Invalid email address."),
@@ -22,9 +27,15 @@ const formSchema = z.object({
     .max(20, "Must contain at most 20 characters.")
 });
 
-const Login:React.FC = () => {
 
-  // Define form.
+const Login: React.FC = () => {
+  
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Define form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,19 +43,30 @@ const Login:React.FC = () => {
       password: "",
     },
   })
-
-  // const { data: orderList, isMutating, trigger } = useSWRMutation("orderListKey", fetcher);
  
-  // Define a submit handler.
+  // Define a submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+
     const res = await login(values);
-    console.log(res);
+    
+    if (res.status !== 200) {
+      toast({
+        variant: "destructive",
+        description: res.message,
+      });
+      return;
+    };
+
+    const token = res.data.access_token;
+
+    store.dispatch(storeAccessToken(token));
+    router.push("/dashboard");
   }
+  
 
   return (
     <main className="flex flex-col items-center justify-center mt-48">
-      <h2 className="text-2xl mb-12">Login</h2>
+      <h2 className="text-2xl mb-12">Vincent CS.</h2>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mb-12 w-3/4">
@@ -83,6 +105,8 @@ const Login:React.FC = () => {
         </form>
       </Form>
 
+      {/* Toaster */}
+      <Toaster />
     </main>
   );
 };
