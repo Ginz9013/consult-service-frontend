@@ -6,6 +6,7 @@ import useEmblaCarousel, {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import dayjs from 'dayjs'
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -26,6 +27,7 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  currentPage: number
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -65,12 +67,14 @@ const Carousel = React.forwardRef<
     )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
+    const [currentPage, setCurrentPage] = React.useState<number>(0)
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
         return
       }
 
+      setCurrentPage(api.selectedScrollSnap())
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
     }, [])
@@ -130,6 +134,7 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          currentPage,
         }}
       >
         <div
@@ -250,6 +255,41 @@ const CarouselNext = React.forwardRef<
 })
 CarouselNext.displayName = "CarouselNext"
 
+const CarouselSwitch = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button>
+>(() => {
+  const { api, currentPage } = useCarousel()
+
+  const startDate = dayjs().startOf('week')
+  const weekDates = Array.from({ length: 7 }).map((_, i) =>
+    startDate.add(i, 'day').format("MM/DD")
+  )
+
+  const switcher = (index: number) => {
+    api?.scrollTo(index);
+  }
+
+  return (
+    <div className="flex bg-secondary p-2 rounded-md">
+      {
+        ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day: string, index: number) => (
+          <Button
+            key={index}
+            variant={ currentPage === index ? "default" : "ghost" }
+            onClick={() => switcher(index)}
+            className="flex flex-col flex-1 min-w-0 py-6"
+          >
+            <p>{ day }</p>
+            <p className="text-xs">{weekDates[index]}</p>
+          </Button>
+        ))
+      }
+    </div>
+  )
+})
+CarouselSwitch.displayName = "CarouselSwitch"
+
 export {
   type CarouselApi,
   Carousel,
@@ -257,4 +297,5 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselSwitch
 }

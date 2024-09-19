@@ -22,8 +22,8 @@ const DietaryTable: React.FC = () => {
 
       <TableBody>
         {
-          new Array(5).fill(null).map((_: any) => (
-            <TableRow>
+          new Array(5).fill(null).map((_: any, index: number) => (
+            <TableRow key={index}>
               <TableCell className="font-medium">13:01</TableCell>
               <TableCell>Lunch</TableCell>
               <TableCell>

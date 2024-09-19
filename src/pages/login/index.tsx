@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,11 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { LoaderCircle } from 'lucide-react';
 
 import { store } from "@/redux/index";
 import { storeAccessToken } from "@/redux/dispatcher";
 import { login } from "@/lib/auth/api";
-import { useState } from 'react';
  
 const formSchema = z.object({
   email: z.string().email("Invalid email address."),
@@ -46,6 +47,7 @@ const Login: React.FC = () => {
  
   // Define a submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
 
     const res = await login(values);
     
@@ -54,11 +56,13 @@ const Login: React.FC = () => {
         variant: "destructive",
         description: res.message,
       });
+      setIsLoading(false);
       return;
     };
 
     const token = res.data.access_token;
 
+    setIsLoading(false);
     store.dispatch(storeAccessToken(token));
     router.push("/dashboard");
   }
@@ -101,7 +105,13 @@ const Login: React.FC = () => {
             )}
           />
           <br />
-          <Button type="submit" className="w-full">Login</Button>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {
+              isLoading
+                ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                : "Login" 
+            }
+          </Button>
         </form>
       </Form>
 
