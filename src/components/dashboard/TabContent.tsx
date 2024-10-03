@@ -1,15 +1,17 @@
 import { CarouselItem } from "@/components/ui/carousel";
 import DailyForm from "./DailyForm";
 import DietaryTable from "./DietaryTable";
-import { Button } from "../ui/button";
 
+type TabContentProps = {
+  dailyRecord: any;
+}
 
-const TabContent: React.FC = () => {
+const TabContent: React.FC<TabContentProps> = ({ dailyRecord }) => {
+
   return (
     <CarouselItem>
       <DietaryTable />
-      <DailyForm />
-      <Button className="w-full py-6 my-4 text-lg">Submit</Button>
+      <DailyForm record={dailyRecord} />
     </CarouselItem>
   );
 };

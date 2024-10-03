@@ -28,18 +28,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoaderCircle } from 'lucide-react';
 
-import { getWeekData } from '@/lib/record/api';
+import { getWeekRecord } from '@/lib/record/api';
 
 const weekDataFetcher = async ([, token]: [string, string]) => {
   const start_date = dayjs().startOf('week').format("YYYY-MM-DD");
   const end_date = dayjs().endOf('week').format("YYYY-MM-DD");
 
-  const res = await getWeekData({ token, start_date, end_date });
+  const res = await getWeekRecord({ token, start_date, end_date });
 
   if (res.status === 401)
     throw new Error(`Request failed with status ${res.status}`);
 
-  return res;
+  return res.data;
 }
 
 const Dashboard = () => {
@@ -48,8 +48,19 @@ const Dashboard = () => {
 
   const token = useSelector((state: any) => state.authentication.token);
 
-  const { data, error, isLoading } = useSWR(["getWeekData", token], weekDataFetcher);
+  const { data: weeklyRecord, error, isLoading } = useSWR(["getWeekRecord", token], weekDataFetcher);
 
+
+  const getWeeklyDate = () => {
+    const startDate = dayjs().startOf('week');
+    const weeklyDate = Array.from({ length: 7 }).map((_, i) =>
+      startDate.add(i, 'day').format("YYYY-MM-DD")
+    );
+
+    return weeklyDate;
+  }
+
+  const weeklyDate = getWeeklyDate();
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
@@ -112,8 +123,8 @@ const Dashboard = () => {
 
         <CarouselContent>
           {
-            ["1", "2", "3", "4", "5", "6", "7"].map((value: string) => (
-              <TabContent key={value} />
+            weeklyDate.map((date: string) => (
+              <TabContent key={date} dailyRecord={weeklyRecord.find((record: any) => record.date === date)} />
             ))
           }
         </CarouselContent>
