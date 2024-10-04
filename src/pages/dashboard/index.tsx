@@ -28,13 +28,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoaderCircle } from 'lucide-react';
 
-import { getWeekRecord } from '@/lib/record/api';
+import { getDailyRecord } from '@/lib/record/api';
 
-const weekDataFetcher = async ([, token]: [string, string]) => {
+const weekDataFetcher = async () => {
   const start_date = dayjs().startOf('week').format("YYYY-MM-DD");
   const end_date = dayjs().endOf('week').format("YYYY-MM-DD");
 
-  const res = await getWeekRecord({ token, start_date, end_date });
+  const res = await getDailyRecord({ start_date, end_date });
 
   if (res.status === 401)
     throw new Error(`Request failed with status ${res.status}`);
@@ -46,9 +46,7 @@ const Dashboard = () => {
 
   const router = useRouter();
 
-  const token = useSelector((state: any) => state.authentication.token);
-
-  const { data: weeklyRecord, error, isLoading } = useSWR(["getWeekRecord", token], weekDataFetcher);
+  const { data: weeklyRecord, error, isLoading } = useSWR("getWeeklyRecords", weekDataFetcher);
 
 
   const getWeeklyDate = () => {
@@ -124,28 +122,15 @@ const Dashboard = () => {
         <CarouselContent>
           {
             weeklyDate.map((date: string) => (
-              <TabContent key={date} dailyRecord={weeklyRecord.find((record: any) => record.date === date)} />
+              <TabContent
+                key={date}
+                date={date}
+                dailyRecord={weeklyRecord.find((record: any) => record.date === date)}
+              />
             ))
           }
         </CarouselContent>
       </Carousel>
-
-
-      {/* <AlertDialog open={isShowDialog}>
-        <AlertDialogTrigger>Open</AlertDialogTrigger>
-        <AlertDialogContent className="w-4/5">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Please login again!</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your authentication has expired.
-            </AlertDialogDescription>
-            <br />
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push("/login")}>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog> */}
     </main>
   );
 };

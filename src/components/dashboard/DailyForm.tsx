@@ -4,25 +4,62 @@ import { Input } from "@/components/ui/input";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import dayjs from "dayjs";
+import { mutate } from "swr";
+import { createDailyRecord } from "@/lib/record/api";
+import { LoaderCircle } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 type DailyFormProps = {
+  date: string;
   record: any;
 }
 
-const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
+const DailyForm: React.FC<DailyFormProps> = ({ date, record }) => {
+
+  const { toast } = useToast();
 
   const [isFormEditing, setIsFormEditing] = useState<boolean>(() => record ? false : true);
 
   const [formData, setFormData] = useState<any>(() => record ? record : {});
 
-  console.log(formData);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const submitHandler = () => {
-    console.log(formData);
+  const submitHandler = async () => {
+
+    setIsLoading(true);
+
+    const reqBody = { ...formData, date }
+    const res = await createDailyRecord(reqBody);
+
+    if (res.status === 200) {
+      toast({
+        description: res.message,
+      });
+      mutate("getWeeklyRecords");
+      setIsFormEditing(false);
+    } else {
+      toast({
+        variant: "destructive",
+        description: res.message,
+      });
+    }
+    setIsLoading(false);
   }
 
   return (
     <div className="w-full px-1 my-4">
+
+      <Button onClick={() => {
+        console.log("dafsd")
+        toast({
+          title: "Scheduled: Catch up ",
+          description: "Friday, February 10, 2023 at 5:57 PM",
+          action: (
+            <Button>Undo</Button>
+          ),
+        })
+      }}>DEV</Button>
 
       {/* Body */}
       <h2 className="text-xl font-bold">Body</h2>
@@ -62,11 +99,30 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
       <div className="flex justify-between gap-4 mb-8">
         <div className="w-full">
           <Label htmlFor="awake">Awake</Label>
-          <Input type="time" id="awake" />
+          <Input
+            type="time"
+            id="awake"
+            value={formData?.awake}
+            onChange={
+              (e) => {
+                console.log(e.target.value)
+                setFormData((prev: any) => ({ ...prev, awake: e.target.value }))
+              }
+            }
+            disabled={!isFormEditing}
+          />
         </div>
         <div className="w-full">
           <Label htmlFor="sleep">Sleep</Label>
-          <Input type="time" id="sleep" />
+          <Input
+            type="time"
+            id="sleep"
+            value={formData?.sleep}
+            onChange={
+              (e) => setFormData((prev: any) => ({ ...prev, sleep: e.target.value }))
+            }
+            disabled={!isFormEditing}
+          />
         </div>
       </div>
 
@@ -200,7 +256,11 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
               className="w-full py-6 my-4 text-lg"
               onClick={submitHandler}
             >
-              Submit
+              {
+                isLoading
+                ? <LoaderCircle className="animate-spin" />
+                : "Submit"
+              }
             </Button>
           : isFormEditing
           ? <div className="flex gap-4">
