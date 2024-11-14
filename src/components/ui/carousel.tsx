@@ -255,6 +255,10 @@ const CarouselNext = React.forwardRef<
 })
 CarouselNext.displayName = "CarouselNext"
 
+
+interface CarouselSwitchProps<T> extends React.ComponentProps<typeof Button> {
+  items?: T[]; // 示例：您可以添加额外的属性
+}
 const CarouselSwitch = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<typeof Button>
