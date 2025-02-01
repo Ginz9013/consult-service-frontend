@@ -8,11 +8,19 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <>
-      <Header />
+    <div className="h-screen flex flex-col">
+      <header className="fixed z-20 top-0 w-full rounded-b-xl overflow-hidden">
+        <Header />      
+      </header>
+
+      <main className="flex-1 pt-28 overflow-scroll">
         { children }
-      <Footer />
-    </>
+      </main>
+
+      <footer className="rounded-t-xl overflow-hidden">
+        <Footer />
+      </footer>
+    </div>
   );
 };
 

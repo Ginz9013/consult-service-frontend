@@ -7,7 +7,7 @@ import {
   Carousel,
   CarouselContent,
   CarouselSwitch
-} from "@/components/ui/carousel";
+} from "@/components/ui/carouselCustomization";
 import Layout from "@/components/layout/Layout";
 import BodyChart from "@/components/dashboard/BodyChart";
 import TabContent from "@/components/dashboard/TabContent";
@@ -43,7 +43,6 @@ const weekDataFetcher = async () => {
 }
 
 const Dashboard = () => {
-
   const router = useRouter();
 
   const { data: weeklyRecord, error, isLoading } = useSWR("getWeeklyRecords", weekDataFetcher);
@@ -61,14 +60,14 @@ const Dashboard = () => {
   const weeklyDate = getWeeklyDate();
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">
+    return <div className="flex justify-center items-center h-full">
       <LoaderCircle className="animate-spin" />
       <p className='text-2xl ml-2'>Loading...</p>
     </div>;
   }
 
   if (error) {
-    return <div className="h-screen">
+    return <div className="h-full">
       <AlertDialog open={true}>
         <AlertDialogContent className="w-4/5">
           <AlertDialogHeader>
@@ -87,7 +86,7 @@ const Dashboard = () => {
   }
 
   return (
-    <main className="px-6 flex flex-col items-center pb-8">
+    <div className="px-6 flex flex-col items-center pb-8">
 
       {/* Avatar */}
       <Avatar className="w-32 h-32 relative top-10">
@@ -111,7 +110,7 @@ const Dashboard = () => {
       <BodyChart />
 
       {/* Carousel */}
-      <Carousel className="w-full mt-8">
+      {/* <Carousel className="w-full mt-8">
         <CarouselSwitch />
 
         <div className="flex justify-between w-full my-4">
@@ -130,8 +129,8 @@ const Dashboard = () => {
             ))
           }
         </CarouselContent>
-      </Carousel>
-    </main>
+      </Carousel> */}
+    </div>
   );
 };
 

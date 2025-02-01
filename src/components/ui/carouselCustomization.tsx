@@ -1,11 +1,12 @@
 import * as React from "react"
+import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
-import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import dayjs from 'dayjs'
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -26,6 +27,7 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  currentPage: number
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -65,12 +67,14 @@ const Carousel = React.forwardRef<
     )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
+    const [currentPage, setCurrentPage] = React.useState<number>(0)
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
         return
       }
 
+      setCurrentPage(api.selectedScrollSnap())
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
     }, [])
@@ -130,6 +134,7 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          currentPage,
         }}
       >
         <div
@@ -214,7 +219,7 @@ const CarouselPrevious = React.forwardRef<
       onClick={scrollPrev}
       {...props}
     >
-      <ArrowLeft className="h-4 w-4" />
+      <ArrowLeftIcon className="h-4 w-4" />
       <span className="sr-only">Previous slide</span>
     </Button>
   )
@@ -243,12 +248,51 @@ const CarouselNext = React.forwardRef<
       onClick={scrollNext}
       {...props}
     >
-      <ArrowRight className="h-4 w-4" />
+      <ArrowRightIcon className="h-4 w-4" />
       <span className="sr-only">Next slide</span>
     </Button>
   )
 })
 CarouselNext.displayName = "CarouselNext"
+
+
+interface CarouselSwitchProps<T> extends React.ComponentProps<typeof Button> {
+  items?: T[]; // 示例：您可以添加额外的属性
+}
+const CarouselSwitch = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button>
+>(() => {
+  const { api, currentPage } = useCarousel()
+
+  const startDate = dayjs().startOf('week')
+  const weekDates = Array.from({ length: 7 }).map((_, i) =>
+    startDate.add(i, 'day').format("MM/DD")
+  )
+
+  const switcher = (index: number) => {
+    api?.scrollTo(index);
+  }
+
+  return (
+    <div className="flex bg-secondary p-2 rounded-md">
+      {
+        ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day: string, index: number) => (
+          <Button
+            key={index}
+            variant={ currentPage === index ? "default" : "ghost" }
+            onClick={() => switcher(index)}
+            className="flex flex-col flex-1 min-w-0 py-6"
+          >
+            <p>{ day }</p>
+            <p className="text-xs">{weekDates[index]}</p>
+          </Button>
+        ))
+      }
+    </div>
+  )
+})
+CarouselSwitch.displayName = "CarouselSwitch"
 
 export {
   type CarouselApi,
@@ -257,4 +301,5 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselSwitch
 }

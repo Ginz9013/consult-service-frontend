@@ -1,4 +1,4 @@
-import { CarouselItem } from "@/components/ui/carousel";
+import { CarouselItem } from "@/components/ui/carouselCustomization";
 import DailyForm from "./DailyForm";
 import DietaryTable from "./DietaryTable";
 
