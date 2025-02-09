@@ -17,8 +17,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { LoaderCircle } from 'lucide-react';
 
-import { store } from "@/redux/index";
-import { storeAccessToken } from "@/redux/dispatcher";
+import { useUser } from "@/hooks/useUser";
+import { useAuth } from "@/hooks/useAuth";
 import { login } from "@/lib/auth/api";
  
 const formSchema = z.object({
@@ -33,6 +33,9 @@ const Login: React.FC = () => {
   
   const router = useRouter();
   const { toast } = useToast();
+
+  const [user, setUser] = useUser();
+  const [auth, setAuth] = useAuth();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -63,7 +66,8 @@ const Login: React.FC = () => {
     const token = res.data.access_token;
 
     setIsLoading(false);
-    store.dispatch(storeAccessToken(token));
+    setAuth({token});
+    setUser(res.data.user);
     router.push("/dashboard");
   }
   
