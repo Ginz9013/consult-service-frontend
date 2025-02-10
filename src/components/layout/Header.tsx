@@ -62,13 +62,13 @@ const Header: React.FC = () => {
       </Popover>
 
       <ul className="flex justify-between w-full gap-6">
-        <li>週一</li>
-        <li>週二</li>
-        <li>週三</li>
-        <li>週四</li>
-        <li>週五</li>
-        <li>週六</li>
-        <li>週日</li>
+        <li className="text-sm">週一</li>
+        <li className="text-sm">週二</li>
+        <li className="text-sm">週三</li>
+        <li className="text-sm">週四</li>
+        <li className="text-sm">週五</li>
+        <li className="text-sm">週六</li>
+        <li className="text-sm">週日</li>
       </ul>
       <Carousel setApi={setApi}>
         <CarouselContent>
