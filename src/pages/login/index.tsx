@@ -65,12 +65,13 @@ const Login: React.FC = () => {
 
     const token = res.data.access_token;
 
-    setIsLoading(false);
     setAuth({token});
     setUser(res.data.user);
-    router.push("/dashboard");
+    await router.push("/dashboard");
+    setIsLoading(false);
   }
-  
+
+  if(auth.token) router.push("/dashboard");
 
   return (
     <main className="flex flex-col items-center justify-center mt-48">
