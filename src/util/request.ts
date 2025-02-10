@@ -1,8 +1,8 @@
 export const fetchWithToken = (url: string, options: RequestInit = {
   method: "GET"
 }) => {
-    const auth = localStorage.getitem("auth") as any;
-    const token = auth?.token satisfies string;
+    const auth = JSON.parse(localStorage.getItem("auth") as string);
+    const token = auth?.token;
 
     options.headers = {
         ...options.headers,
