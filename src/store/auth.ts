@@ -5,7 +5,7 @@ export type Auth = {
 };
 
 const STORAGE_KEY = "auth";
-const defaultAuth: Auth = {
+export const defaultAuth: Auth = {
     token: null
 };
 
