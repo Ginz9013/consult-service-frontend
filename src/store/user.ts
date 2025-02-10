@@ -10,7 +10,7 @@ export type User = {
 };
 
 const STORAGE_KEY = "user";
-const defaultInfo: User = {
+export const defaultUser: User = {
     name: "",
     email: "",
     weight: 0,
@@ -19,17 +19,17 @@ const defaultInfo: User = {
     nextConsultation: "",
 };
 
-const getStoredInfo = () => {
+const getStoredUser = () => {
     try {
         const storedInfo = localStorage.getItem(STORAGE_KEY);
-        return storedInfo ? JSON.parse(storedInfo) : defaultInfo;
+        return storedInfo ? JSON.parse(storedInfo) : defaultUser;
     } catch (error) {
         console.error("Failed to load user state from localStorage", error);
-        return defaultInfo;
+        return defaultUser;
     }
 }
 
-const state$ = new BehaviorSubject<User>(getStoredInfo());
+const state$ = new BehaviorSubject<User>(getStoredUser());
 
 export const userStore = {
   subscribe: (callback: (userState: User) => void) =>
