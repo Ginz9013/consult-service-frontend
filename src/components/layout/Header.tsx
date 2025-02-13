@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -15,19 +15,21 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { useDate } from '@/hooks/useDate';
 
 
 const Header: React.FC = () => {
-  const [api, setApi] = React.useState<CarouselApi>()
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [api, setApi] = useState<CarouselApi>();
+  const [date, setDate] = useDate();
   
+  const dateList = useMemo(() => dateListChanger(date.date), [date]);
 
-  const dateList = useMemo(() => dateListChanger(date), [date]);
+  const changeDate = (date: Date | undefined) => date && setDate({ date });
 
-  const test = () => {
-    console.log(api);
+  const changeCalendarDate = (date: Date | undefined) => {
+    if(date) setDate({ date });
     api?.scrollTo(2);
-  }
+  };
 
   useEffect(() => {
     if (!api) {
@@ -47,14 +49,14 @@ const Header: React.FC = () => {
               !date && "text-muted-foreground"
             )}
           >
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
+            {date ? format(date.date, "PPP") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
           <Calendar
             mode="single"
-            selected={date}
-            onSelect={setDate}
+            selected={date.date}
+            onSelect={changeCalendarDate}
             initialFocus
             className='w-full'
           />
@@ -76,20 +78,75 @@ const Header: React.FC = () => {
             dateList.map((week: any, index: number) => (
               <CarouselItem key={String(index)}>
                 <div className="flex items-center justify-between gap-6">
-                  <button className="w-8">{week.Monday}</button>
-                  <button className="w-8">{week.Tuesday}</button>
-                  <button className="w-8">{week.Wednesday}</button>
-                  <button className="w-8">{week.Thursday}</button>
-                  <button className="w-8">{week.Friday}</button>
-                  <button className="w-8">{week.Saturday}</button>
-                  <button className="w-8">{week.Sunday}</button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Monday)}
+                    )}
+                    onClick={() => changeDate(week.Monday.toDate())}
+                  >
+                    {week.Monday.date()}
+                  </button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Tuesday) }
+                    )}
+                    onClick={() => changeDate(week.Tuesday.toDate())}
+                  >
+                    {week.Tuesday.date()}
+                  </button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Wednesday) }
+                    )}
+                    onClick={() => changeDate(week.Wednesday.toDate())}
+                  >
+                    {week.Wednesday.date()}
+                  </button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Thursday) }
+                    )}
+                    onClick={() => changeDate(week.Thursday.toDate())}
+                  >
+                    {week.Thursday.date()}
+                  </button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Friday) }
+                    )}
+                    onClick={() => changeDate(week.Friday.toDate())}
+                  >
+                    {week.Friday.date()}
+                  </button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Saturday) }
+                    )}
+                    onClick={() => changeDate(week.Saturday.toDate())}
+                  >
+                    {week.Saturday.date()}
+                  </button>
+                  <button
+                    className={cn(
+                      "w-8",
+                      { "bg-white rounded-full text-primary": checkSelected(date.date, week.Sunday) }
+                    )}
+                    onClick={() => changeDate(week.Sunday.toDate())}
+                  >
+                    {week.Sunday.date()}
+                  </button>
                 </div>
               </CarouselItem>
             ))
           }
         </CarouselContent>
       </Carousel>
-      {/* <Button onClick={test}>DEV</Button> */}
     </div>
   );
 };
@@ -101,21 +158,25 @@ const dateListChanger = (date: Date | undefined) => {
 
   const inputDate = dayjs(date); // 轉換為 dayjs 物件
   const startOfWeek = inputDate.startOf("week").add(1, "day"); // 計算該週的週一
-  const result: { [key: string]: number }[] = [];
+  const result: { [key: string]: Dayjs }[] = [];
 
   // 遍歷前後兩週並生成資料
   for (let weekOffset = -2; weekOffset <= 2; weekOffset++) {
     const weekStart = startOfWeek.add(weekOffset * 7, "day"); // 每次偏移一週
-    const weekData: { [key: string]: number } = {};
+    const weekData: { [key: string]: Dayjs } = {};
 
     // 計算當週的每一天
     ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].forEach((day, index) => {
       const currentDay = weekStart.add(index, "day");
-      weekData[day] = currentDay.date(); // 使用 `.date()` 提取當月的日期
+      weekData[day] = currentDay;
     });
 
     result.push(weekData);
   }
 
   return result;
-}
+};
+
+// Utils
+export const checkSelected = (currentDate: Date, selectDate: Dayjs) =>
+  dayjs(currentDate).isSame(selectDate, 'day');

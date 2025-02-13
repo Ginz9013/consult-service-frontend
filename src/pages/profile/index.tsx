@@ -22,12 +22,12 @@ const Profile = () => {
         <div className="p-8">
             <div className="flex justify-between items-center">
                 <Avatar className="w-24 h-24">
-                    <AvatarImage src={ user.avatarImg ?? "https://github.com/shadcn.png" } alt="@shadcn" />
+                    <AvatarImage src={ user.avatarImg ?? "https://github.com/shadcn.png" } className="object-cover" alt="AvatarImage" />
                     <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
 
                 <ul className="flex flex-col gap-2">
-                    <li>名稱：{user.name}</li>
+                    <li>名稱：{user.nickname}</li>
                     <li>信箱：{user.email}</li>
                     <li>密碼：********</li>
                 </ul>

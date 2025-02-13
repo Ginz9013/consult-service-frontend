@@ -2,12 +2,11 @@ import { fetchWithToken } from '@/util/request';
 
 // Get Week Record
 type GetDailyRecordProps = {
-  start_date: string;
-  end_date: string;
+  date: string;
 }
 
-export const getDailyRecord = async ({ start_date, end_date }: GetDailyRecordProps) => {
-  const res = await fetchWithToken(`/api/record/daily?start_date=${start_date}&end_date=${end_date}`, {
+export const getDailyRecord = async ({ date }: GetDailyRecordProps) => {
+  const res = await fetchWithToken(`/api/record/daily/${date}`, {
     method: "GET"
   });
   const data = await res.json();

@@ -1,113 +1,39 @@
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselSwitch
-} from "@/components/ui/carouselCustomization";
 import Layout from "@/components/layout/Layout";
 import BodyChart from "@/components/dashboard/BodyChart";
-import TabContent from "@/components/dashboard/TabContent";
-import DietaryForm from "@/components/dashboard/DietaryForm";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useRouter } from "next/router";
+import { useEffect, useMemo } from "react";
+
 import useSWR from "swr";
-import dayjs from "dayjs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { LoaderCircle } from 'lucide-react';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { getDailyRecord } from '@/lib/record/api';
+import UserStatus from "@/components/dashboard/UserStatus";
 import DietaryTable from "@/components/dashboard/DietaryTable";
 import DailyForm from "@/components/dashboard/DailyForm";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import TokenExpiredAlert from "@/components/TokenExpiredAlert";
 
-const weekDataFetcher = async () => {
-  const start_date = dayjs().startOf('week').format("YYYY-MM-DD");
-  const end_date = dayjs().endOf('week').format("YYYY-MM-DD");
+import { useDate } from "@/hooks/useDate";
+import { DateType } from "@/store/date";
+import { pipe, clone, omit, map } from "ramda";
+import { formatDateString } from "@/util/dataFormatter";
 
-  const res = await getDailyRecord({ start_date, end_date });
-
-  if (res.status === 401)
-    throw new Error(`Request failed with status ${res.status}`);
-
-  return res.data;
-}
 
 const Dashboard = () => {
-  const router = useRouter();
+  const [ date ] = useDate();
+console.log("dashboard re-render")
+  const { data: DailyRecord, error, isLoading } = useSWR(["getDailyRecord", date], dataFetcher);
+  const { daily, diets } = useMemo(() => splitDailyAndDietData(DailyRecord), [DailyRecord]);
 
-  // const { data: weeklyRecord, error, isLoading } = useSWR("getWeeklyRecords", weekDataFetcher);
+  if (isLoading) return <LoadingSpinner />;
 
-
-  // const getWeeklyDate = () => {
-  //   const startDate = dayjs().startOf('week');
-  //   const weeklyDate = Array.from({ length: 7 }).map((_, i) =>
-  //     startDate.add(i, 'day').format("YYYY-MM-DD")
-  //   );
-  //   return weeklyDate;
-  // }
-
-  // const weeklyDate = getWeeklyDate();
-
-  // if (isLoading) {
-  //   return <div className="flex justify-center items-center h-full">
-  //     <LoaderCircle className="animate-spin" />
-  //     <p className='text-2xl ml-2'>Loading...</p>
-  //   </div>;
-  // }
-
-  // if (error) {
-  //   return <div className="h-full">
-  //     <AlertDialog open={true}>
-  //       <AlertDialogContent className="w-4/5">
-  //         <AlertDialogHeader>
-  //           <AlertDialogTitle>Please login again!</AlertDialogTitle>
-  //           <AlertDialogDescription>
-  //             Your authentication has expired.
-  //           </AlertDialogDescription>
-  //           <br />
-  //         </AlertDialogHeader>
-  //         <AlertDialogFooter>
-  //           <AlertDialogAction onClick={() => router.push("/login")}>OK</AlertDialogAction>
-  //         </AlertDialogFooter>
-  //       </AlertDialogContent>
-  //     </AlertDialog>
-  //   </div>
-  // }
+  if (error) return <TokenExpiredAlert />;
 
   return (
     <div className="flex flex-col items-center px-6 pt-4 pb-8">
 
       {/* Status */}
-      <div className="flex justify-around items-end text-center w-full px-4">
-        <div>
-          <h2 className="text-2xl font-bold">45.6</h2>
-          <p className="text-xs">Weight</p>
-        </div>
-
-        {/* Avatar */}
-        <Avatar className="w-24 h-24">
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-
-        <div>
-          <h2 className="text-2xl font-bold">23<span className="text-xl">%</span></h2>
-          <p className="text-xs">Body Fat</p>
-        </div>
-      </div>
+      <UserStatus />
 
       {/* Chart */}
       <BodyChart />
@@ -122,7 +48,7 @@ const Dashboard = () => {
           <DietaryTable />
         </TabsContent>
         <TabsContent value="record">
-          {/* <DailyForm date="2025-02-01" record={weeklyRecord.find((record: any) => record.date === "2025-02-01")} /> */}
+          <DailyForm record={daily} />
         </TabsContent>
       </Tabs>
     </div>
@@ -136,3 +62,22 @@ Dashboard.getLayout = (page: React.ReactNode) => (
 );
 
 export default Dashboard;
+
+// Utils
+export const dataFetcher = async ([key, date]: [string, DateType]) => {
+  const dateString = formatDateString(date.date);
+  const res = await getDailyRecord({ date: dateString });
+
+  if (res.status === 401)
+    throw new Error(`Request failed with status ${res.status}`);
+
+  return res.data;
+};
+
+export const splitDailyAndDietData = (data: any) => pipe(
+    clone,
+    (clonedData: any) => ({
+      daily: omit(['diet'], clonedData),
+      diets: clonedData?.diet,
+    })
+  )(data);

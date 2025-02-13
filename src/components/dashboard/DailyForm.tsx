@@ -9,15 +9,18 @@ import { createDailyRecord } from "@/lib/record/api";
 import { LoaderCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import { useDate } from "@/hooks/useDate";
+import { formatDateString } from "@/util/dataFormatter";
 
 type DailyFormProps = {
-  date: string;
   record: any;
 }
 
-const DailyForm: React.FC<DailyFormProps> = ({ date, record }) => {
+const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
 
   const { toast } = useToast();
+
+  const [date] = useDate();
 
   const [isFormEditing, setIsFormEditing] = useState<boolean>(() => record ? false : true);
 
@@ -29,7 +32,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ date, record }) => {
 
     setIsLoading(true);
 
-    const reqBody = { ...formData, date }
+    const reqBody = { ...formData }
     const res = await createDailyRecord(reqBody);
 
     if (res.status === 200) {
@@ -50,7 +53,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ date, record }) => {
   return (
     <div className="w-full px-1 my-4">
 
-      <Button onClick={() => {
+      {/* <Button onClick={() => {
         console.log("dafsd")
         toast({
           title: "Scheduled: Catch up ",
@@ -59,7 +62,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ date, record }) => {
             <Button>Undo</Button>
           ),
         })
-      }}>DEV</Button>
+      }}>DEV</Button> */}
 
       {/* Body */}
       <h2 className="text-xl font-bold">Body</h2>
@@ -254,7 +257,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ date, record }) => {
         !record
           ? <Button
               className="w-full py-6 my-4 text-lg"
-              onClick={submitHandler}
+              // onClick={submitHandler}
             >
               {
                 isLoading

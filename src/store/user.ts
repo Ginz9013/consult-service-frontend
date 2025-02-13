@@ -1,7 +1,9 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, distinctUntilChanged } from "rxjs";
+import { equals } from "ramda";
 
 export type User = {
   name: string;
+  nickname: string;
   email: string;
   weight: number;
   bodyFat: number;
@@ -12,6 +14,7 @@ export type User = {
 const STORAGE_KEY = "user";
 export const defaultUser: User = {
     name: "",
+    nickname: "",
     email: "",
     weight: 0,
     bodyFat: 0,
@@ -33,7 +36,9 @@ const state$ = new BehaviorSubject<User>(getStoredUser());
 
 export const userStore = {
   subscribe: (callback: (userState: User) => void) =>
-    state$.subscribe(callback),
+    state$
+      .asObservable()
+      .subscribe(callback),
   getUserStore: () => state$.getValue(),
   setUserStore: (newUser: Partial<User>) => {
 
