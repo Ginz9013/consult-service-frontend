@@ -7,7 +7,7 @@ type login = {
 }
 
 export const login = async (user: login) => {
-  const res = await fetch(`/api/auth/login`, {
+  const res = await fetch(`/api/user/login`, {
       method: "POST",
       headers: {
           "Content-Type": "application/json"
@@ -22,7 +22,7 @@ export const login = async (user: login) => {
 
 // Logout
 export const logout = async () => {
-  const res = await fetchWithToken("/api/auth/logout", {
+  const res = await fetchWithToken("/api/user/logout", {
     method: "POST"
   })
 
