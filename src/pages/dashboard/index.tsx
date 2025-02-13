@@ -27,8 +27,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoaderCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { getDailyRecord } from '@/lib/record/api';
+import DietaryTable from "@/components/dashboard/DietaryTable";
+import DailyForm from "@/components/dashboard/DailyForm";
 
 const weekDataFetcher = async () => {
   const start_date = dayjs().startOf('week').format("YYYY-MM-DD");
@@ -45,91 +48,83 @@ const weekDataFetcher = async () => {
 const Dashboard = () => {
   const router = useRouter();
 
-  const { data: weeklyRecord, error, isLoading } = useSWR("getWeeklyRecords", weekDataFetcher);
+  // const { data: weeklyRecord, error, isLoading } = useSWR("getWeeklyRecords", weekDataFetcher);
 
 
-  const getWeeklyDate = () => {
-    const startDate = dayjs().startOf('week');
-    const weeklyDate = Array.from({ length: 7 }).map((_, i) =>
-      startDate.add(i, 'day').format("YYYY-MM-DD")
-    );
+  // const getWeeklyDate = () => {
+  //   const startDate = dayjs().startOf('week');
+  //   const weeklyDate = Array.from({ length: 7 }).map((_, i) =>
+  //     startDate.add(i, 'day').format("YYYY-MM-DD")
+  //   );
+  //   return weeklyDate;
+  // }
 
-    return weeklyDate;
-  }
+  // const weeklyDate = getWeeklyDate();
 
-  const weeklyDate = getWeeklyDate();
+  // if (isLoading) {
+  //   return <div className="flex justify-center items-center h-full">
+  //     <LoaderCircle className="animate-spin" />
+  //     <p className='text-2xl ml-2'>Loading...</p>
+  //   </div>;
+  // }
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-full">
-      <LoaderCircle className="animate-spin" />
-      <p className='text-2xl ml-2'>Loading...</p>
-    </div>;
-  }
-
-  if (error) {
-    return <div className="h-full">
-      <AlertDialog open={true}>
-        <AlertDialogContent className="w-4/5">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Please login again!</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your authentication has expired.
-            </AlertDialogDescription>
-            <br />
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push("/login")}>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  }
+  // if (error) {
+  //   return <div className="h-full">
+  //     <AlertDialog open={true}>
+  //       <AlertDialogContent className="w-4/5">
+  //         <AlertDialogHeader>
+  //           <AlertDialogTitle>Please login again!</AlertDialogTitle>
+  //           <AlertDialogDescription>
+  //             Your authentication has expired.
+  //           </AlertDialogDescription>
+  //           <br />
+  //         </AlertDialogHeader>
+  //         <AlertDialogFooter>
+  //           <AlertDialogAction onClick={() => router.push("/login")}>OK</AlertDialogAction>
+  //         </AlertDialogFooter>
+  //       </AlertDialogContent>
+  //     </AlertDialog>
+  //   </div>
+  // }
 
   return (
-    <div className="px-6 flex flex-col items-center pb-8">
-
-      {/* Avatar */}
-      <Avatar className="w-32 h-32 relative top-10">
-        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-        <AvatarFallback>CN</AvatarFallback>
-      </Avatar>
+    <div className="flex flex-col items-center px-6 pt-4 pb-8">
 
       {/* Status */}
-      <div className="flex justify-between text-center w-full px-4">
+      <div className="flex justify-around items-end text-center w-full px-4">
         <div>
-          <h2 className="text-4xl font-bold">45.6</h2>
-          <p>Weight</p>
+          <h2 className="text-2xl font-bold">45.6</h2>
+          <p className="text-xs">Weight</p>
         </div>
+
+        {/* Avatar */}
+        <Avatar className="w-24 h-24">
+          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
+
         <div>
-          <h2 className="text-4xl font-bold">23<span className="text-xl">%</span></h2>
-          <p>Body Fat</p>
+          <h2 className="text-2xl font-bold">23<span className="text-xl">%</span></h2>
+          <p className="text-xs">Body Fat</p>
         </div>
       </div>
 
       {/* Chart */}
       <BodyChart />
 
-      {/* Carousel */}
-      {/* <Carousel className="w-full mt-8">
-        <CarouselSwitch />
-
-        <div className="flex justify-between w-full my-4">
-          <div />
-          <DietaryForm />
-        </div>
-
-        <CarouselContent>
-          {
-            weeklyDate.map((date: string) => (
-              <TabContent
-                key={date}
-                date={date}
-                dailyRecord={weeklyRecord.find((record: any) => record.date === date)}
-              />
-            ))
-          }
-        </CarouselContent>
-      </Carousel> */}
+      {/* Tab */}
+      <Tabs defaultValue="diet" className="w-full">
+        <TabsList className="w-full">
+          <TabsTrigger value="diet" className="w-1/2 data-[state=active]:bg-primary data-[state=active]:text-white">飲食</TabsTrigger>
+          <TabsTrigger value="record" className="w-1/2 data-[state=active]:bg-primary data-[state=active]:text-white">紀錄</TabsTrigger>
+        </TabsList>
+        <TabsContent value="diet">
+          <DietaryTable />
+        </TabsContent>
+        <TabsContent value="record">
+          {/* <DailyForm date="2025-02-01" record={weeklyRecord.find((record: any) => record.date === "2025-02-01")} /> */}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
