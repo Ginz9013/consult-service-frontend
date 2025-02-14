@@ -16,6 +16,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { useDate } from '@/hooks/useDate';
+import { dateStore } from '@/store/date';
 
 
 const Header: React.FC = () => {
@@ -24,9 +25,7 @@ const Header: React.FC = () => {
   
   const dateList = useMemo(() => dateListChanger(date.date), [date]);
 
-  const changeDate = (date: Date | undefined) => date && setDate({ date });
-
-  const changeCalendarDate = (date: Date | undefined) => {
+  const changeDate = (date: Date | undefined) => {
     if(date) setDate({ date });
     api?.scrollTo(2);
   };
@@ -56,7 +55,7 @@ const Header: React.FC = () => {
           <Calendar
             mode="single"
             selected={date.date}
-            onSelect={changeCalendarDate}
+            onSelect={changeDate}
             initialFocus
             className='w-full'
           />
