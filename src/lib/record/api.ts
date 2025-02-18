@@ -14,10 +14,10 @@ export const getDailyRecord = async ({ date }: GetDailyRecordProps) => {
   return data;
 }
 
-type CreateDailyRecordProps = {
+export type CreateDailyRecordProps = {
   date: string;
   weight?: number;
-  body_fat: number;
+  body_fat?: number;
   awake?: string; 
   sleep?: string; 
   water_morning?: number; 
