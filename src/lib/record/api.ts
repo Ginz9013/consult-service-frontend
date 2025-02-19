@@ -14,7 +14,7 @@ export const getDailyRecord = async ({ date }: GetDailyRecordProps) => {
   return data;
 }
 
-export type CreateDailyRecordProps = {
+export type DailyRecords = {
   date: string;
   weight?: number;
   body_fat?: number;
@@ -31,7 +31,8 @@ export type CreateDailyRecordProps = {
   note?: string; 
 }
 
-export const createDailyRecord = async (dailyRecord: CreateDailyRecordProps) => {
+// Create Daily Record
+export const createDailyRecord = async (dailyRecord: DailyRecords) => {
   
   const res = await fetchWithToken("/api/record/daily", {
     method: "POST",
@@ -39,6 +40,22 @@ export const createDailyRecord = async (dailyRecord: CreateDailyRecordProps) => 
       "Content-Type": "application/json"
     },
     body: JSON.stringify(dailyRecord)
+  });
+
+  const data = await res.json();
+
+  return data;
+}
+
+// Update Daily Record
+export const updateDailyRecord = async ({ date, ...updateRecord }: DailyRecords) => {
+
+  const res = await fetchWithToken(`/api/record/daily/${date}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(updateRecord)
   });
 
   const data = await res.json();

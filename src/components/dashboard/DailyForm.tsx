@@ -1,17 +1,15 @@
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { mutate } from "swr";
-import { createDailyRecord, type CreateDailyRecordProps } from "@/lib/record/api";
+import { createDailyRecord, updateDailyRecord, type DailyRecords } from "@/lib/record/api";
 import { LoaderCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { useDate } from "@/hooks/useDate";
 import { formatDateString } from "@/util/dataFormatter";
-import { number, z } from "zod";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,31 +20,61 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { evolve, filter, pipe } from "ramda";
 
 const formSchema = z.object({
-  weight: z.preprocess(
-    (val) => {
-      if (typeof val === "string" && val.trim() === "") return undefined;
-      return val;
-    },
-    z.coerce.number().gt(0, { message: "體重必須大於零" }).optional()
-  ),
-  body_fat: z.coerce.number().gt(0, { message: "體脂必須大於零" }).optional(),
-  awake: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: "格式必須是 HH:mm，例如 14:44" }).optional(),
-  sleep: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: "格式必須是 HH:mm，例如 14:44" }).optional(),
-  water_morning: z.coerce.number().gt(0, { message: "必須大於零" }).optional(),
-  water_afternoon: z.coerce.number().gt(0, { message: "必須大於零" }).optional(),
-  water_evening: z.coerce.number().gt(0, { message: "必須大於零" }).optional(),
-  water_another: z.coerce.number().gt(0, { message: "必須大於零" }).optional(),
-  coffee: z.coerce.number().gt(0, { message: "必須大於零" }).optional(),
-  tea: z.coerce.number().gt(0, { message: "必須大於零" }).optional(),
-  sport: z.string().optional(),
-  defecation: z.string().optional(),
-  note: z.string().optional(),
+  weight: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "體重必須大於0" }),
+  ]),
+  body_fat: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "體脂必須大於0" }).lt(100, { message: "體脂必須小於100" }),
+  ]),
+  awake: z.union([
+    z.literal(""),
+    z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: "格式必須是 HH:mm，例如 14:44" }),
+  ]),
+  sleep: z.union([
+    z.literal(""),
+    z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: "格式必須是 HH:mm，例如 14:44" }),
+  ]),
+  water_morning: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "必須大於0" }),
+  ]),
+  water_afternoon: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "必須大於0" }),
+  ]),
+  water_evening: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "必須大於0" }),
+  ]),
+  water_another: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "必須大於0" }),
+  ]),
+  coffee: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "必須大於0" }),
+  ]),
+  tea: z.union([
+    z.literal(""),
+    z.coerce.number().gt(0, { message: "必須大於0" }),
+  ]),
+  sport: z.string(),
+  defecation: z.string(),
+  note: z.string(),
 });
 
+enum SubmitType {
+  create = 1,
+  update = 2,
+}
+
 type DailyFormProps = {
-  record: any;
+  record: DailyRecords;
 }
 
 const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
@@ -62,29 +90,45 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // @ts-ignore
       weight: "",
+      body_fat: "",
+      awake: "",
+      sleep: "",
+      water_morning: "",
+      water_afternoon: "",
+      water_evening: "",
+      water_another: "",
+      coffee: "",
+      tea: "",
+      sport: "",
+      defecation: "",
+      note: "",
     }
   });
 
-  const submitHandler = async (values: any) => {
-    console.log("submit");
-    console.log(values);
-    const data = removeEmptyValues(values);
+  const submitHandler = async (submitType: SubmitType, values: any) => {
+    const data = pipe(
+      evolve({ body_fat: value => value / 100 }),
+      filter(Boolean),
+    )(values);
+
 
     if(isEmptyObject(data)) {
       toast({
+        variant: "destructive",
         description: "請至少填入一項!",
       });
       return;
     };
 
-    // console.log(formData);
-    setIsLoading(true);
-    const currnetDate = formatDateString(date.date);
-    const reqBody: CreateDailyRecordProps = { date: currnetDate, ...data };
-    console.log(reqBody);
-    const res = await createDailyRecord(reqBody);
+    const reqBody: DailyRecords = { date: formatDateString(date.date), ...data };
+
+    let res;
+    if(submitType === SubmitType.create) {
+      res = await createDailyRecord(reqBody);
+    } else {
+      res = await updateDailyRecord(reqBody);
+    }
 
     if (res.status === 200) {
       toast({
@@ -101,18 +145,29 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
     setIsLoading(false);
   }
 
+  const handleCreate = form.handleSubmit((values) =>
+    submitHandler(SubmitType.create, values)
+  );
+
+  const handleUpdate = form.handleSubmit((values) =>
+    submitHandler(SubmitType.update, values)
+  );
+
   useEffect(() => {
-    // 印出來看看內容是否真的變了
-    console.log("record changed", record);
-    // 利用展開運算子產生新物件參考
-    if(!isEmptyObject(record)) form.reset(changeNullValues(record));
+    if(!isEmptyObject(record)) {
+      let data = { ...record };
+
+      if(record.body_fat) {
+        data = evolve({ body_fat: value => value * 100 }, record);
+      }
+      form.reset(changeNullValues(data));
+    }
   }, [JSON.stringify(record)]);
 
   return (
     <div className="w-full px-1 my-4">
-
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(submitHandler)} className="w-full space-y-4 mb-12">
+        <form onSubmit={handleCreate} className="w-full space-y-4 mb-12">
 
           {/* Body */}
           <h2 className="text-xl font-bold">Body</h2>
@@ -125,7 +180,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                 <FormItem>
                   <FormLabel>體重</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,8 +194,8 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormLabel>體脂</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input type="number" {...field} />
-                      <span className="absolute -top-1 right-3 translate-y-1/2">%</span>
+                      <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                      <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">%</span>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -160,7 +215,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                 <FormItem>
                   <FormLabel>起床</FormLabel>
                   <FormControl>
-                    <Input type="time" {...field} />
+                    <Input type="time" {...field} disabled={!isFormEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,7 +229,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                 <FormItem>
                   <FormLabel>睡覺</FormLabel>
                   <FormControl>
-                    <Input type="time" {...field} />
+                    <Input type="time" {...field} disabled={!isFormEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -195,7 +250,10 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormItem>
                     <FormLabel>早上</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <div className="relative">
+                        <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                        <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">ml</span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -208,7 +266,10 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormItem>
                     <FormLabel>中午</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <div className="relative">
+                        <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                        <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">ml</span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,7 +282,10 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormItem>
                     <FormLabel>晚上</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <div className="relative">
+                        <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                        <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">ml</span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -236,7 +300,10 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormItem>
                     <FormLabel>其他</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <div className="relative">
+                        <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                        <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">ml</span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -249,7 +316,10 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormItem>
                     <FormLabel>咖啡</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <div className="relative">
+                        <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                        <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">ml</span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -262,7 +332,10 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <FormItem>
                     <FormLabel>茶</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <div className="relative">
+                        <Input type="number" inputMode="numeric" {...field} disabled={!isFormEditing} />
+                        <span className="absolute -top-1 right-3 translate-y-1/2 text-gray-500">ml</span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -280,7 +353,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} disabled={!isFormEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -297,7 +370,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} disabled={!isFormEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -314,7 +387,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} disabled={!isFormEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -341,14 +414,15 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full py-6 my-4 text-lg"
+                    className="w-full"
                     onClick={() => setIsFormEditing(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     type="button"
-                    className="w-full py-6 my-4 text-lg"
+                    className="w-full"
+                    onClick={handleUpdate}
                   >
                     Update
                   </Button>
@@ -363,9 +437,9 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
           }
         </form>
       </Form>
-      <Button onClick={() => {
-        console.log(form.getValues());
-      }}>click</Button>
+
+      {/* Toaster */}
+      <Toaster />
     </div>
   );
 };
@@ -376,22 +450,13 @@ export default DailyForm;
 export const isEmptyObject = (obj: Object) =>
   Object.keys(obj).length === 0 && obj.constructor === Object;
 
-export function removeEmptyValues<T extends object>(obj: T): Partial<T> {
-  return Object.entries(obj).reduce((acc, [key, value]) => {
-    if (value) {
-      acc[key as keyof T] = value;
-    }
-    return acc;
-  }, {} as Partial<T>);
-};
-
-export function changeNullValues<T extends object>(obj: T): Partial<T> {
-  return Object.entries(obj).reduce((acc, [key, value]) => {
+export const changeNullValues = <T extends object>(obj: T): Partial<T> =>
+  Object.entries(obj).reduce((acc, [key, value]) => {
     if (value === null) {
+      // @ts-ignore
       acc[key as keyof T] = "";
     } else {
       acc[key as keyof T] = value;
     }
     return acc;
   }, {} as Partial<T>);
-};
