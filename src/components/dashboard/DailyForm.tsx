@@ -158,7 +158,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
       let data = { ...record };
 
       if(record.body_fat) {
-        data = evolve({ body_fat: value => value * 100 }, record);
+        data.body_fat = record.body_fat * 100;
       }
       form.reset(changeNullValues(data));
     }
