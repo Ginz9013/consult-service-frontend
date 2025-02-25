@@ -74,7 +74,7 @@ enum SubmitType {
 }
 
 type DailyFormProps = {
-  record: DailyRecords;
+  record: Omit<DailyRecords, "date">;
 }
 
 const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
