@@ -7,10 +7,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { clearAllStore } from "@/store/clear";
 import { useRouter } from "next/router";
 
 const TokenExpiredAlert = () => {
   const router = useRouter();
+
+  const handlerLogout = async () => {
+    clearAllStore(); 
+    await router.replace("/login");
+  }
   
   return (
     <div className="h-full">
@@ -24,7 +30,7 @@ const TokenExpiredAlert = () => {
             <br />
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push("/login")}>OK</AlertDialogAction>
+            <AlertDialogAction onClick={handlerLogout}>OK</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
