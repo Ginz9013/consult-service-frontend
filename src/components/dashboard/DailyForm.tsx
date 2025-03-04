@@ -107,11 +107,7 @@ const DailyForm: React.FC<DailyFormProps> = ({ record }) => {
   });
 
   const submitHandler = async (submitType: SubmitType, values: any) => {
-    const data = pipe(
-      evolve({ body_fat: value => value / 100 }),
-      filter(Boolean),
-    )(values);
-
+    const data = formatSubmitValues(values);
 
     if(isEmptyObject(data)) {
       toast({
@@ -460,3 +456,8 @@ export const changeNullValues = <T extends object>(obj: T): Partial<T> =>
     }
     return acc;
   }, {} as Partial<T>);
+
+export const formatSubmitValues = pipe(
+    evolve({ body_fat: value => value / 100 }),
+    filter(Boolean),
+  );
